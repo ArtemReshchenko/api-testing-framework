@@ -1,0 +1,30 @@
+{
+  "name": "api-testing-framework",
+  "version": "1.0.0",
+  "description": "Automation Testing Framework for JSONPlaceholder APIs",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report",
+    "generate:types": "ts-node scripts/generate-types.ts"
+  },
+  "keywords": [
+    "testing",
+    "playwright",
+    "typescript",
+    "api-testing"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.42.1",
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3",
+    "dotenv": "^16.4.5",
+    "quicktype-core": "^23.0.77",
+    "zod": "^3.22.4",
+    "ts-node": "^10.9.2",
+    "axios": "^1.6.7"
+  }
+} 
