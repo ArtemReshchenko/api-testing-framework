@@ -1,37 +1,46 @@
-name: API Tests
+name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: ["**"] # Run on all branches
   pull_request:
-    branches: [ main ]
+    branches: ["**"] # Run on all PRs
+  schedule:
+    - cron: "0 0 * * *" # Run daily at midnight UTC
 
 jobs:
   test:
+    name: Run Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20] # Test on multiple Node.js versions
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '18'
-        cache: 'npm'
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Install Playwright
-      run: npx playwright install --with-deps
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
-    - name: Run tests
-      run: npm test
+      - name: Generate Types
+        run: npm run generate:types
 
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v2
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30 
+      - name: Run tests
+        run: npm run test:ci
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-node-${{ matrix.node-version }}
+          path: playwright-report/
+          retention-days: 7
