@@ -8,7 +8,7 @@
     "test:headed": "playwright test --headed",
     "test:report": "playwright show-report",
     "generate:types": "ts-node scripts/generate-types.ts",
-    "test:ci": "playwright test --reporter=list",
+    "test:ci": "playwright test --reporter=list,html --output reports/",
     "build": "tsc --project tsconfig.json"
   },
   "keywords": [
