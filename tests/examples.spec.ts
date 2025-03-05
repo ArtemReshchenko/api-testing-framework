@@ -2,7 +2,7 @@ import { test, expect } from './fixtures';
 import { PostsService } from '../src/services/posts.service';
 import { CommentsService } from '../src/services/comments.service';
 import { UsersService } from '../src/services/users.service';
-import { Post, Comment, User } from '../src/types/api.types';
+import { Comment } from '../src/types/api.types';
 
 let postsService: PostsService;
 let commentsService: CommentsService;
@@ -18,12 +18,12 @@ test.describe('Advanced API Testing Scenarios', () => {
   test('Caching - should return cached data on subsequent requests', async ({ postsService }) => {
     // First request - no cache
     const startTime = Date.now();
-    const posts = await postsService.getAllPosts({ useCache: true });
+    const posts = await postsService.getAllPosts(); 
     const firstRequestTime = Date.now() - startTime;
 
     // Second request - should use cache
     const cachedStartTime = Date.now();
-    const cachedPosts = await postsService.getAllPosts({ useCache: true });
+    const cachedPosts = await postsService.getAllPosts();
     const secondRequestTime = Date.now() - cachedStartTime;
 
     expect(posts).toEqual(cachedPosts);
@@ -33,8 +33,8 @@ test.describe('Advanced API Testing Scenarios', () => {
   test('Performance monitoring - should track request metrics', async ({ postsService }) => {
     const options = { trackMetrics: true };
     
-    await postsService.getAllPosts(options);
-    await postsService.getPostById(1, options);
+    await postsService.getAllPosts();
+    await postsService.getPostById(1);
     
     const metrics = postsService.getMetrics();
     expect(metrics).toHaveLength(2);
@@ -129,7 +129,7 @@ test.describe('Advanced API Testing Scenarios', () => {
       trackMetrics: true
     };
 
-    const post = await postsService.getPostById(1, options);
+    const post = await postsService.getPostById(1);
     const metrics = postsService.getMetrics();
     
     expect(post.id).toBe(1);

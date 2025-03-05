@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { TodosService } from '../src/services/todos.service';
 import { Todo } from '../src/types/api.types';
+import { TodosService } from '@/services/todos.service';
 
 let todosService: TodosService;
 
