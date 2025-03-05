@@ -8,16 +8,24 @@ on:
   schedule:
     - cron: "0 0 * * *" # Run daily at midnight UTC
 
+# Cancel in-progress runs for PRs when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false # Continue with other Node versions if one fails
       matrix:
-        node-version: [18, 20] # Test on multiple Node.js versions
+        node-version: [18, 20]
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1 # Shallow clone for faster checkout
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -26,15 +34,50 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci --prefer-offline --no-audit
+          npm cache verify
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ matrix.node-version }}-chromium-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ matrix.node-version }}-chromium-
+            playwright-${{ runner.os }}-
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 15
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_wait_seconds: 15
+          warning_on_retry: true
+          command: |
+            echo "Installing Playwright Chromium browser..."
+            npx playwright install chromium --with-deps
+            echo "Verifying Chromium installation..."
+            npx playwright install-deps chromium
+            npx playwright cr --version
+
+      - name: Verify browser installation
+        run: |
+          echo "Checking Playwright installation..."
+          npx playwright --version
+          echo "Checking browser binaries..."
+          ls -la ~/.cache/ms-playwright || true
 
       - name: Generate Types
         run: npm run generate:types
 
       - name: Run tests
+        env:
+          CI: true
+          NODE_ENV: test
         run: npm run test:ci
 
       - name: Upload test results
@@ -44,3 +87,4 @@ jobs:
           name: playwright-report-node-${{ matrix.node-version }}
           path: reports/
           retention-days: 7
+          if-no-files-found: warn
