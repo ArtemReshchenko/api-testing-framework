@@ -15,7 +15,7 @@
     "typescript",
     "api-testing"
   ],
-  "author": "",
+  "author": "Artem Reshchenko",
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.50.1",
